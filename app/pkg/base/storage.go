@@ -5,10 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/qinguoyi/osproxy/app/models"
-	"github.com/qinguoyi/osproxy/app/pkg/utils"
-	"github.com/qinguoyi/osproxy/bootstrap"
-	"github.com/qinguoyi/osproxy/bootstrap/plugins"
 	"os"
 	"path"
 	"path/filepath"
@@ -16,6 +12,11 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/qinguoyi/osproxy/app/models"
+	"github.com/qinguoyi/osproxy/app/pkg/utils"
+	"github.com/qinguoyi/osproxy/bootstrap"
+	"github.com/qinguoyi/osproxy/bootstrap/plugins"
 )
 
 var lgLogger *bootstrap.LangGoLogger
@@ -76,19 +77,21 @@ func CheckValid(uidStr, date, expireStr string) (int64, error, string) {
 }
 
 // GenUploadSingle .
+// GenUploadSingle()函数用于生成上传链接
 func GenUploadSingle(filename string, expire int, respChan chan models.GenUploadResp,
 	metaDataInfoChan chan models.MetaDataInfo, wg *sync.WaitGroup) {
 	defer wg.Done()
-	bucket := selectBucketBySuffix(filename)
-	uid, err := NewSnowFlake().NextId()
+	bucket := selectBucketBySuffix(filename) // selectBucketBySuffix()函数用于根据文件后缀选择bucket,将文件分类后
+	uid, err := NewSnowFlake().NextId()      // NewSnowFlake()函数用于创建一个雪花算法实例，NextId()函数用于生成一个id
 	if err != nil {
 		//lgLogger.WithContext(c).Error("雪花算法生成ID失败，详情：", zap.Any("err", err.Error()))
 		return
 	}
-	uidStr := strconv.FormatInt(uid, 10)
-	name := filepath.Base(filename)
-	storageName := fmt.Sprintf("%s.%s", uidStr, GetExtension(filename))
-	objectName := fmt.Sprintf("%s/%s", bucket, storageName)
+	uidStr := strconv.FormatInt(uid, 10) // FormatInt()函数用于将int64类型的数字转换成字符串
+	name := filepath.Base(filename)      // Base()函数用于获取文件名
+	// sprintf()函数用于格式化字符串，这里的格式化字符串是%s.%s，第一个%s是uidStr，第二个%s是GetExtension(filename)
+	storageName := fmt.Sprintf("%s.%s", uidStr, GetExtension(filename)) // GetExtension()函数用于获取文件后缀
+	objectName := fmt.Sprintf("%s/%s", bucket, storageName)             // objectName是一个字符串，格式是bucket/storageName
 
 	// 在本地创建uid的目录
 	if err := os.MkdirAll(path.Join(utils.LocalStore, uidStr), 0755); err != nil {
@@ -96,14 +99,18 @@ func GenUploadSingle(filename string, expire int, respChan chan models.GenUpload
 		return
 	}
 
-	// 生成加密query
+	// 生成加密query query是一个字符串，格式是uidStr-date-expire-signature
 	date := time.Now().Format("2006-01-02T15:04:05Z")
-	signature := decode(fmt.Sprintf("%s-%d", date, expire))
-	queryString := GenUploadSignature(uidStr, date, expire, signature)
+	signature := decode(fmt.Sprintf("%s-%d", date, expire))            // decode()函数用于解密，解密具体是怎么实现的呢？这里的解密是将数字转换成字符串
+	queryString := GenUploadSignature(uidStr, date, expire, signature) // GenUploadSignature()函数用于生成加密query
+	// single、merge、multi区别是什么？single是单文件上传，merge是合并文件，multi是多文件上传
 	single := fmt.Sprintf("/api/storage/v0/upload?%s", queryString)
 	multi := fmt.Sprintf("/api/storage/v0/upload/multi?%s", queryString)
 	merge := fmt.Sprintf("/api/storage/v0/upload/merge?%s", queryString)
-	respChan <- models.GenUploadResp{
+	respChan <- models.GenUploadResp{ // respChan是一个通道，通道的元素是GenUploadResp类型，这一行代码的作用是将GenUploadResp类型的数据添加到respChan中
+		// 通道的作用是：1.用于多个goroutine之间的数据传递；2.用于goroutine和主线程之间的数据传递
+		// 为什么要用通道呢？因为通道是线程安全的，而且通道可以返回多个值，第一个值是key对应的value，第二个值是key是否存在
+		// 在这里使用通道的原因是：1.在这里使用通道可以将数据传递给主线程，主线程可以将数据写入数据库
 		Uid: uidStr,
 		Url: &models.UrlResult{
 			Single: single,

@@ -5,6 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"path"
+	"sync"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	"github.com/qinguoyi/osproxy/app/models"
@@ -16,12 +23,6 @@ import (
 	"github.com/qinguoyi/osproxy/app/pkg/web"
 	"github.com/qinguoyi/osproxy/bootstrap"
 	"github.com/qinguoyi/osproxy/bootstrap/plugins"
-	"io"
-	"net/http"
-	"os"
-	"path"
-	"sync"
-	"time"
 )
 
 /*
@@ -30,23 +31,35 @@ import (
 
 // DownloadHandler    下载数据
 //
-//	@Summary		下载数据
-//	@Description	下载数据
-//	@Tags			下载
-//	@Accept			application/json
-//	@Param			uid			query	string	true	"文件uid"
-//	@Param			name		query	string	true	"文件名称"
-//	@Param			online		query	string	true	"是否在线"
-//	@Param			date		query	string	true	"链接生成时间"
-//	@Param			expire		query	string	true	"过期时间"
-//	@Param			bucket		query	string	true	"存储桶"
-//	@Param			object		query	string	true	"存储名称"
-//	@Param			signature	query	string	true	"签名"
-//	@Produce		application/json
-//	@Success		200	{object}	web.Response
-//	@Router			/api/storage/v0/download [get]
+//	@Summary      下载数据
+//	@Description  下载数据
+//	@Tags         下载
+//	@Accept       application/json
+//	@Param        uid        query  string  true  "文件uid"
+//	@Param        name       query  string  true  "文件名称"
+//	@Param        online     query  string  true  "是否在线"
+//	@Param        date       query  string  true  "链接生成时间"
+//	@Param        expire     query  string  true  "过期时间"
+//	@Param        bucket     query  string  true  "存储桶"
+//	@Param        object     query  string  true  "存储名称"
+//	@Param        signature  query  string  true  "签名"
+//	@Produce      application/json
+//	@Success      200  {object}  web.Response
+//	@Router       /api/storage/v0/download [get]
 func DownloadHandler(c *gin.Context) {
 	// 校验参数
+	// 下载的过程是：1.校验参数；2.查询数据元信息；3.根据数据元信息从对象存储中获取数据；4.将数据写入响应体
+	// 1.校验参数，这里的参数是uid、name、online、date、expire、bucket、object、signature.
+	// 如何校验呢？这里的校验是通过CheckValid()函数来实现的,这些参数校验时的标准是什么呢？这些参数校验时的标准是：1.校验uid是否是数字；2.校验date是否是时间格式；3.校验expire是否是数字；4.校验online是否是0或1；5.校验signature是否正确
+
+	// 2.查询数据元信息，这里的数据元信息是指文件的元信息，比如文件的大小、文件的类型等
+	// 如何查询呢？这里的查询是通过GetByUid()函数来实现的，GetByUid()函数用于根据uid查询数据元信息
+	// 这些元数据信息存储在哪里呢？这些元数据信息存储在redis中，redis是一种内存数据库，它的特点是：1.数据存储在内存中；2.数据是键值对的形式；3.数据是无序的；4.数据是线程不安全的；5.数据可以用于多个goroutine之间的数据传递，它可以返回多个值，第一个值是key对应的value，第二个值是key是否存在
+
+	// 3.根据数据元信息从对象存储中获取数据，这里的对象存储是指云存储、本地存储
+
+	// 4.将数据写入响应体，这里的响应体是指http响应体，http响应体是指http响应的内容，它包含了响应头和响应体，响应头是指http响应的头部，响应体是指http响应的内容
+
 	uidStr := c.Query("uid")
 	name := c.Query("name")
 	online := c.Query("online")
@@ -59,7 +72,7 @@ func DownloadHandler(c *gin.Context) {
 	if online == "" {
 		online = "1"
 	}
-	if !utils.Contains(online, []string{"0", "1"}) {
+	if !utils.Contains(online, []string{"0", "1"}) { // Contains()函数用于判断一个字符串是否在一个切片中
 		web.ParamsError(c, "online参数有误")
 		return
 	}

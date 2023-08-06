@@ -4,6 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path"
+	"strconv"
+	"sync"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	"github.com/qinguoyi/osproxy/app/models"
@@ -13,10 +18,6 @@ import (
 	"github.com/qinguoyi/osproxy/app/pkg/web"
 	"github.com/qinguoyi/osproxy/bootstrap/plugins"
 	"go.uber.org/zap"
-	"os"
-	"path"
-	"strconv"
-	"sync"
 )
 
 /*
@@ -25,16 +26,16 @@ import (
 
 // UploadLinkHandler    初始化上传连接
 //
-//	@Summary		初始化上传连接
-//	@Description	初始化上传连接
-//	@Tags			链接
-//	@Accept			application/json
-//	@Param			RequestBody	body	models.GenUpload	true	"生成上传链接请求体"
-//	@Produce		application/json
-//	@Success		200	{object}	web.Response{data=models.GenUploadResp}
-//	@Router			/api/storage/v0/link/upload [post]
+//	@Summary      初始化上传连接
+//	@Description  初始化上传连接
+//	@Tags         链接
+//	@Accept       application/json
+//	@Param        RequestBody  body  models.GenUpload  true  "生成上传链接请求体"
+//	@Produce      application/json
+//	@Success      200  {object}  web.Response{data=models.GenUploadResp}
+//	@Router       /api/storage/v0/link/upload [post]
 func UploadLinkHandler(c *gin.Context) {
-	var genUploadReq models.GenUpload
+	var genUploadReq models.GenUpload // GenUpload是一个结构体，包含两个成员变量，一个是FilePath，一个是Expire
 	if err := c.ShouldBindJSON(&genUploadReq); err != nil {
 		web.ParamsError(c, fmt.Sprintf("参数解析有误，详情：%s", err))
 		return
@@ -44,10 +45,10 @@ func UploadLinkHandler(c *gin.Context) {
 		return
 	}
 
-	// deduplication filepath
-	fileNameList := utils.RemoveDuplicates(genUploadReq.FilePath)
+	// deduplication filepath 翻译：去重文件路径 deduplication是去重的意思
+	fileNameList := utils.RemoveDuplicates(genUploadReq.FilePath) // RemoveDuplicates()函数用于去重
 	for _, fileName := range fileNameList {
-		if base.GetExtension(fileName) == "" {
+		if base.GetExtension(fileName) == "" { // GetExtension()函数用于获取文件后缀
 			web.ParamsError(c, fmt.Sprintf("文件[%s]后缀有误，不能为空", fileName))
 			return
 		}
@@ -55,13 +56,17 @@ func UploadLinkHandler(c *gin.Context) {
 
 	var resp []models.GenUploadResp
 	var resourceInfo []models.MetaDataInfo
-	respChan := make(chan models.GenUploadResp, len(fileNameList))
-	metaDataInfoChan := make(chan models.MetaDataInfo, len(fileNameList))
+	respChan := make(chan models.GenUploadResp, len(fileNameList))        // respChan是一个通道，通道的元素是GenUploadResp类型
+	metaDataInfoChan := make(chan models.MetaDataInfo, len(fileNameList)) // metaDataInfoChan是一个通道，通道的元素是MetaDataInfo类型
 
-	var wg sync.WaitGroup
+	var wg sync.WaitGroup // WaitGroup是一个结构体，包含一个成员变量，一个是Wait
+	// 本质是一种计数器，用来记录还有多少个goroutine没有执行完毕
+	// Wait()函数用于等待所有的goroutine执行完毕，WaitGroup的使用方式是：1.创建一个WaitGroup实例；2.调用WaitGroup实例的Add()函数，Add()函数用于设置WaitGroup的Wait的值；3.调用WaitGroup实例的Done()函数，Done()函数用于将Wait的值减1；4.调用WaitGroup实例的Wait()函数，Wait()函数用于等待Wait的值为0
 	for _, fileName := range fileNameList {
-		wg.Add(1)
+		wg.Add(1) // Add()函数用于设置WaitGroup的Wait的值
 		go base.GenUploadSingle(fileName, genUploadReq.Expire, respChan, metaDataInfoChan, &wg)
+		// GenUploadSingle()函数用于生成上传链接
+		// 上述两个通道的传递是在GenUploadSingle()函数中实现的
 	}
 	wg.Wait()
 	close(respChan)
@@ -73,6 +78,7 @@ func UploadLinkHandler(c *gin.Context) {
 	for re := range metaDataInfoChan {
 		resourceInfo = append(resourceInfo, re)
 	}
+	//
 	if !(len(resp) == len(resourceInfo) && len(resp) == len(fileNameList)) {
 		// clean local dir
 		for _, i := range resp {
@@ -98,14 +104,14 @@ func UploadLinkHandler(c *gin.Context) {
 
 // DownloadLinkHandler    获取下载连接
 //
-//	@Summary		获取下载连接
-//	@Description	获取下载连接
-//	@Tags			链接
-//	@Accept			application/json
-//	@Param			RequestBody	body	models.GenDownload	true	"下载链接请求体"
-//	@Produce		application/json
-//	@Success		200	{object}	web.Response{data=models.GenDownloadResp}
-//	@Router			/api/storage/v0/link/download [post]
+//	@Summary      获取下载连接
+//	@Description  获取下载连接
+//	@Tags         链接
+//	@Accept       application/json
+//	@Param        RequestBody  body  models.GenDownload  true  "下载链接请求体"
+//	@Produce      application/json
+//	@Success      200  {object}  web.Response{data=models.GenDownloadResp}
+//	@Router       /api/storage/v0/link/download [post]
 func DownloadLinkHandler(c *gin.Context) {
 	var genDownloadReq models.GenDownload
 	if err := c.ShouldBindJSON(&genDownloadReq); err != nil {
@@ -131,6 +137,7 @@ func DownloadLinkHandler(c *gin.Context) {
 		key := fmt.Sprintf("%d-%s", uid, expireStr)
 		lgRedis := new(plugins.LangGoRedis).NewRedis()
 		val, err := lgRedis.Get(context.Background(), key).Result()
+		// Get()函数用于获取key对应的value，如果key不存在，那么返回redis.Nil
 		// key在redis中不存在
 		if err == redis.Nil {
 			uidList = append(uidList, uid)
@@ -143,6 +150,7 @@ func DownloadLinkHandler(c *gin.Context) {
 		}
 		var msg models.GenDownloadResp
 		if err := json.Unmarshal([]byte(val), &msg); err != nil {
+			// []byte(val)是将val转换成[]byte类型的数据，json.Unmarshal()函数用于将json字符串转换成结构体
 			lgLogger.WithContext(c).Error("查询redis结果，序列化失败")
 			web.InternalError(c, "")
 			return
