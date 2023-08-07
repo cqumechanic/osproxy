@@ -3,15 +3,19 @@ package thirdparty
 import (
 	"bytes"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/qinguoyi/osproxy/app/pkg/base"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"strings"
+
+	"github.com/gin-gonic/gin"
+	"github.com/qinguoyi/osproxy/app/pkg/base"
 )
 
 type storageService struct{}
+
+// 这个go文件的作用是：1.将请求转发到storage服务；2.将storage服务的响应返回给客户端
+// 包含的函数有：1.Locate()函数，用于获取存储服务的地址；2.UploadForward()函数，用于将上传请求转发到存储服务；3.MergeForward()函数，用于将合并请求转发到存储服务；4.DownloadForward()函数，用于将下载请求转发到存储服务
 
 // NewStorageService .
 func NewStorageService() *storageService { return &storageService{} }
@@ -30,7 +34,7 @@ func (s *storageService) Locate(scheme, ip, port, uid string) (string, error) {
 		return "", err
 	}
 
-	return strings.Trim(string(data.Data), "\""), nil
+	return strings.Trim(string(data.Data), "\""), nil // Trim()函数用于去掉字符串两端的指定字符
 }
 
 // UploadForward .
@@ -48,7 +52,7 @@ func (s *storageService) UploadForward(c *gin.Context, scheme, ip, port, uid str
 		queryParam[k] = v[0]
 	}
 
-	form, err := c.MultipartForm()
+	form, err := c.MultipartForm() // MultipartForm()函数用于获取表单数据
 	if err != nil {
 		return 500, nil, nil, err
 	}

@@ -1,9 +1,10 @@
 package storage
 
 import (
+	"sync"
+
 	"github.com/qinguoyi/osproxy/bootstrap"
 	"github.com/qinguoyi/osproxy/config"
-	"sync"
 )
 
 // CustomStorage 存储
@@ -31,6 +32,7 @@ var (
 )
 
 func InitStorage(conf *config.Configuration) {
+	// 初始化存储对象
 	var storageHandler CustomStorage
 	if conf.Local.Enabled {
 		storageHandler = NewLocalStorage()
@@ -53,7 +55,7 @@ func InitStorage(conf *config.Configuration) {
 		Storage: storageHandler,
 	}
 	for _, bucket := range []string{"image", "video", "audio", "archive", "unknown", "doc"} {
-		if err := storageHandler.MakeBucket(bucket); err != nil {
+		if err := storageHandler.MakeBucket(bucket); err != nil { // MakeBucket()函数用于创建存储桶
 			panic(err)
 		}
 	}

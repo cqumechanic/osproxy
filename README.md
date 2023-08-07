@@ -67,7 +67,7 @@ docker run -d --restart=always -p 5432:5432 --name=postgresql -v `pwd`/pg:/var/l
 * 启动redis
 
 ```shell
-docker run -d --restart=always --name myredis -p 6379:6379 redis --requirepass "123456"
+docker run -d --restart=always --name myredis -p 30001:6379 redis --requirepass "123456"
 ```
 
 * 启动minio
@@ -116,7 +116,7 @@ database:
 
 redis:
   host: 127.0.0.1        # 服务地址
-  port: 6379             # 服务端口
+  port: 30001             # 服务端口
   db: 0                  # 库选择
   password: 123456       # 密码
 

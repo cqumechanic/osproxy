@@ -19,7 +19,7 @@ services:
     container_name: storage_redis
     restart: always
     ports:
-      - '6379:6379'
+      - '30001:30001'
     volumes:
       - /home/lighthouse/redis:/data                  # 修改为你的路径
     networks:

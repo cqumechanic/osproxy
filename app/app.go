@@ -2,17 +2,18 @@ package app
 
 import (
 	"context"
-	"github.com/gin-gonic/gin"
-	"github.com/qinguoyi/osproxy/app/pkg/base"
-	"github.com/qinguoyi/osproxy/app/pkg/event/dispatch"
-	"github.com/qinguoyi/osproxy/config"
-	"go.uber.org/zap"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/qinguoyi/osproxy/app/pkg/base"
+	"github.com/qinguoyi/osproxy/app/pkg/event/dispatch"
+	"github.com/qinguoyi/osproxy/config"
+	"go.uber.org/zap"
 )
 
 // App 应用结构体
@@ -25,10 +26,10 @@ type App struct {
 func NewHttpServer(
 	conf *config.Configuration,
 	router *gin.Engine,
-) *http.Server {
+) *http.Server { // Server是http的核心结构体，包含了路由、中间件等信息
 	return &http.Server{
-		Addr:    ":" + conf.App.Port,
-		Handler: router,
+		Addr:    ":" + conf.App.Port, // Addr是http服务的地址，这里的地址是从配置文件中获取的
+		Handler: router,              // Handler是http服务的路由，这里的路由是gin的实例
 	}
 }
 
@@ -57,10 +58,10 @@ func (a *App) RunServer() {
 
 	// 启动 任务
 	a.logger.Info("start task ...")
-	p, consumers := dispatch.RunTask()
+	p, consumers := dispatch.RunTask() // RunTask()函数用于启动任务，返回值是一个生产者和一个消费者的切片
 
 	// 等待中断信号以优雅地关闭应用
-	quit := make(chan os.Signal)
+	quit := make(chan os.Signal) // make()函数用于创建一个信号通道,channel是一种数据结构，它的特点是：1.先进先出；2.线程安全；3.可以用于多个goroutine之间的数据传递
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
@@ -83,7 +84,7 @@ func (a *App) RunServer() {
 func (a *App) Run() error {
 	// 启动 http server
 	go func() {
-		if err := a.httpSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := a.httpSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed { // ListenAndServe()函数用于启动http服务
 			panic(err)
 		}
 

@@ -34,7 +34,7 @@ database:
 
 redis:
   host: reids            # 服务地址
-  port: 6379             # 服务端口
+  port: 30001             # 服务端口
   db: 0                  # 库选择
   password: 123456       # 密码
 

@@ -2,9 +2,10 @@ package web
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 /*
@@ -31,7 +32,7 @@ func StreamSuccess(c *gin.Context, step func(w io.Writer) bool) {
 
 // Success 响应成功
 func Success(c *gin.Context, data interface{}) {
-	c.JSON(http.StatusOK, Response{
+	c.JSON(http.StatusOK, Response{ // JSON()函数用于返回json格式的响应
 		0,
 		"ok",
 		data,

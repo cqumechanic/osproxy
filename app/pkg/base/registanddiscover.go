@@ -4,14 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"strings"
+	"time"
+
 	"github.com/go-redis/redis/v8"
 	"github.com/qinguoyi/osproxy/app/pkg/utils"
 	"github.com/qinguoyi/osproxy/bootstrap"
 	"github.com/qinguoyi/osproxy/bootstrap/plugins"
-	"io"
-	"strings"
-	"time"
 )
+
+// 这个文件的作用是：1.服务注册；2.心跳检测；3.服务发现，主打一个分布式的不同服务器的打招呼
 
 type serviceRegister struct {
 	client *redis.Client
@@ -27,7 +30,7 @@ func NewServiceRegister() *serviceRegister {
 type Service struct {
 	IP        string
 	Port      string
-	CreatedAt int64
+	CreatedAt int64 // 创建时间
 }
 
 // Register 服务注册
@@ -55,7 +58,7 @@ func (s *serviceRegister) HeartBeat() {
 	timer := time.NewTimer(1 * time.Nanosecond)
 	defer timer.Stop()
 
-	ip, err := GetOutBoundIP()
+	ip, err := GetClientIp()
 	bootstrap.NewLogger().Logger.Info(fmt.Sprintf("当前上报ip:%s", ip))
 	if err != nil {
 		panic(err)
@@ -105,7 +108,7 @@ func (s *serviceRegister) HeartBeat() {
 
 // Discovery 服务发现
 func (s *serviceRegister) Discovery() ([]*Service, error) {
-	result := s.client.HGetAll(context.Background(), utils.ServiceRedisPrefix)
+	result := s.client.HGetAll(context.Background(), utils.ServiceRedisPrefix) // HGetAll()函数用于获取redis中的所有数据
 	if result.Err() == redis.Nil {
 		return nil, nil
 	}
@@ -117,7 +120,7 @@ func (s *serviceRegister) Discovery() ([]*Service, error) {
 		return nil, err
 	}
 	resp := make([]*Service, 0)
-	boundary := time.Now().Add(-5 * time.Minute).Unix()
+	boundary := time.Now().Add(-5 * time.Minute).Unix() // 5分钟之前的数据不要
 	for _, value := range arr {
 		var ser *Service
 		err := json.Unmarshal([]byte(value), &ser)

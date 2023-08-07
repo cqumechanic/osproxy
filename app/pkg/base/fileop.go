@@ -11,7 +11,13 @@ import (
 	"sync"
 )
 
+// 这个文件的作用是：有关文件的操作
+// 共4有个函数：
+// 1.InTurnPrint()函数用于交替打印1-100；2.CalculateByteMd5()函数用于计算byte类型数据的md5值；
+// 3.CalculateFileMd5()函数用于计算文件的md5值; 4.DetectContentType()函数用于检测文件的类型
+
 // InTurnPrint .
+// InTurnPrint()函数用于交替打印1-100
 func InTurnPrint(filename string) string {
 	// 分块计算，流式计算(避免打爆内存)，顺序合并，类似N个协程交替打印1-100
 	goNum := 10
@@ -43,7 +49,7 @@ func CalculateByteMd5(b []byte) (string, error) {
 	if err != nil {
 		fmt.Println("io copy error")
 	}
-	md5Str := hex.EncodeToString(hash.Sum(nil))
+	md5Str := hex.EncodeToString(hash.Sum(nil)) // Sum()函数用于计算md5值,hex.EncodeToString()函数用于将md5值转换成字符串
 	return md5Str, nil
 }
 

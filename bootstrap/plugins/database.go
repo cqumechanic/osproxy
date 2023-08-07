@@ -2,23 +2,24 @@ package plugins
 
 import (
 	"fmt"
-	"github.com/qinguoyi/osproxy/app/models"
-	"github.com/qinguoyi/osproxy/bootstrap"
-	"github.com/qinguoyi/osproxy/config"
-	"github.com/qinguoyi/osproxy/config/plugins"
-	"go.uber.org/zap"
-	"gopkg.in/natefinch/lumberjack.v2"
-	"gorm.io/driver/mysql"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
-	"gorm.io/gorm/schema"
 	"io"
 	"log"
 	"os"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/qinguoyi/osproxy/app/models"
+	"github.com/qinguoyi/osproxy/bootstrap"
+	"github.com/qinguoyi/osproxy/config"
+	"github.com/qinguoyi/osproxy/config/plugins"
+	"go.uber.org/zap"
+	"gopkg.in/natefinch/lumberjack.v2" // lumberjack是一个日志库，它的作用是将日志写入文件
+	"gorm.io/driver/mysql"             // mysql驱动
+	"gorm.io/driver/postgres"          // postgres驱动
+	"gorm.io/gorm"                     // gorm是一个orm框架，orm是对象关系映射，它的作用是将对象和数据库中的表进行映射，这样就可以通过对象来操作数据库了
+	"gorm.io/gorm/logger"
+	"gorm.io/gorm/schema"
 )
 
 var lgDB = map[string]*LangGoDB{}
@@ -99,6 +100,7 @@ func (lg *LangGoDB) initializeDB(db *plugins.Database, conf *config.Configuratio
 	})
 }
 
+// 初始化 postgres gorm.DB
 func initPGGorm(dbConfig *plugins.Database, conf *config.Configuration) {
 
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Shanghai",

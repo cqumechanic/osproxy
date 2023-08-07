@@ -7,26 +7,27 @@ redis分布式锁
 import (
 	"context"
 	"fmt"
-	"github.com/go-redis/redis/v8"
 	"math/rand"
 	"strconv"
 	"sync/atomic"
 	"time"
+
+	"github.com/go-redis/redis/v8"
 )
 
 const (
-	letters     = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	lockCommand = `if redis.call("GET", KEYS[1]) == ARGV[1] then
+	letters     = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" // 字母表
+	lockCommand = `if redis.call("GET", KEYS[1]) == ARGV[1] then 
                       redis.call("SET", KEYS[1], ARGV[1], "PX", ARGV[2])
                       return "OK"
                    else
                        return redis.call("SET", KEYS[1], ARGV[1], "NX", "PX", ARGV[2])
-                   end`
+                   end` // lua脚本，用于加锁
 	delCommand = `if redis.call("GET", KEYS[1]) == ARGV[1] then
                       return redis.call("DEL", KEYS[1])
                   else
                       return 0
-                  end`
+                  end` // lua脚本，用于释放锁
 	randomLen = 16
 	// 默认超时时间，防止死锁
 	tolerance       = 500 // milliseconds
@@ -69,7 +70,7 @@ func (rl *RedisLock) Acquire() (bool, error) {
 	// 获取过期时间
 	seconds := atomic.LoadUint32(&rl.seconds)
 	// 默认锁过期时间为500ms，防止死锁
-	res := rl.store.Eval(*rl.ctx, lockCommand, []string{rl.key}, []string{
+	res := rl.store.Eval(*rl.ctx, lockCommand, []string{rl.key}, []string{ // Eval()函数用于执行lua脚本
 		rl.id, strconv.Itoa(int(seconds)*millisPerSecond + tolerance),
 	})
 	resp, err := res.Result()

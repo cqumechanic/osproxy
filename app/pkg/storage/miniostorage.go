@@ -1,11 +1,12 @@
 package storage
 
 import (
-	"context"
+	"context" // context包提供了对处理单个请求的跟踪，取消和超时的操作
+	"io"
+
 	"github.com/minio/minio-go/v7"
 	"github.com/qinguoyi/osproxy/app/pkg/utils"
 	"github.com/qinguoyi/osproxy/bootstrap/plugins"
-	"io"
 )
 
 // MinIOStorage minio存储
@@ -23,15 +24,15 @@ func NewMinIOStorage() *MinIOStorage {
 
 // MakeBucket .
 func (s *MinIOStorage) MakeBucket(bucketName string) error {
-	ctx := context.Background()
-	isExist, err := s.client.BucketExists(ctx, bucketName)
+	ctx := context.Background()                            // Background()函数用于创建一个空的context对象
+	isExist, err := s.client.BucketExists(ctx, bucketName) // BucketExists()函数用于判断存储桶是否存在，参数是一个context对象，返回值是一个bool类型的值
 	if err != nil {
 		panic("")
 	}
 	if isExist {
 		return nil
 	}
-	return s.client.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{Region: "cn-north-1"})
+	return s.client.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{Region: "cn-north-1"}) // MakeBucket()函数用于创建存储桶，参数是一个context对象，一个存储桶名，一个MakeBucketOptions对象，返回值是一个error对象
 }
 
 // BucketExists .

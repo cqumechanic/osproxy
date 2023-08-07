@@ -2,13 +2,14 @@ package dispatch
 
 import (
 	"fmt"
+	"sync"
+	"time"
+
 	"github.com/qinguoyi/osproxy/app/pkg/base"
 	"github.com/qinguoyi/osproxy/app/pkg/event"
 	"github.com/qinguoyi/osproxy/app/pkg/repo"
 	"github.com/qinguoyi/osproxy/app/pkg/utils"
 	"github.com/qinguoyi/osproxy/bootstrap/plugins"
-	"sync"
-	"time"
 )
 
 type Producer struct {
@@ -24,7 +25,7 @@ func NewProduce() *Producer {
 // Produce 生产者
 func (p *Producer) Produce() {
 	timer := time.NewTimer(1 * time.Nanosecond)
-	ip, err := base.GetOutBoundIP()
+	ip, err := base.GetClientIp()
 	if err != nil {
 		panic(err)
 	}

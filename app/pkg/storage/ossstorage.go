@@ -2,10 +2,11 @@ package storage
 
 import (
 	"fmt"
+	"io/ioutil"
+
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"github.com/qinguoyi/osproxy/app/pkg/utils"
 	"github.com/qinguoyi/osproxy/bootstrap/plugins"
-	"io/ioutil"
 )
 
 // OssStorage oss存储
@@ -30,7 +31,7 @@ func (s *OssStorage) MakeBucket(bucketName string) error {
 	if isExist {
 		return nil
 	}
-	err = s.client.CreateBucket(bucketName)
+	err = s.client.CreateBucket(bucketName) // CreateBucket()函数用于创建一个存储桶，参数是一个存储桶名，返回值是一个error对象
 	if err != nil {
 		panic(err)
 	}

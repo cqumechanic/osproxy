@@ -34,6 +34,7 @@ type GenUpload struct {
 }
 
 // MultiUrlResult .
+// 在这里实现了单文件上传、合并文件、多文件上传
 type MultiUrlResult struct {
 	Upload string `json:"upload"`
 	Merge  string `json:"merge"`
@@ -72,12 +73,12 @@ type GenDownloadResp struct {
 }
 
 type MD5Name struct {
-	Md5  string `json:"md5"`
-	Path string `json:"path"`
+	Md5  string `json:"md5"`  // Md5是一个字符串，Md5是文件的md5值，md5是一种哈希算法，它的作用是将任意长度的数据转换成固定长度的数据，这样就可以用固定长度的数据来表示任意长度的数据了
+	Path string `json:"path"` // Path是一个字符串，Path是文件的路径
 }
 
 type ResumeReq struct {
-	Data []MD5Name `json:"data"`
+	Data []MD5Name `json:"data"` // Data是一个切片，切片的元素是MD5Name类型 这里的`json:"data"`是结构体标签，用于指定结构体成员变量在json中的名称
 }
 
 type ResumeResp struct {

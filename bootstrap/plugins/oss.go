@@ -1,11 +1,12 @@
 package plugins
 
 import (
+	"sync"
+
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"github.com/qinguoyi/osproxy/bootstrap"
 	"github.com/qinguoyi/osproxy/config"
 	"go.uber.org/zap"
-	"sync"
 )
 
 var lgOss = new(LangGoOss)
@@ -41,7 +42,7 @@ func (lg *LangGoOss) New() interface{} {
 }
 
 func (lg *LangGoOss) Health() {
-	_, err := lgOss.OssClient.IsBucketExist("example")
+	_, err := lgOss.OssClient.IsBucketExist("example") // IsBucketExist 判断存储空间是否存在
 	if err != nil {
 		bootstrap.NewLogger().Logger.Error("oss connect failed, err:", zap.Any("err", err))
 		panic("failed to connect oss")

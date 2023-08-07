@@ -1,5 +1,5 @@
 app:
-  env: prod
+  env: prod                 # 环境, prod, dev, test,三种分别对应生产环境，开发环境，测试环境
   port: 8888                # 服务端口
   app_name: osproxy         # 服务名称
   app_url: http://127.0.0.1
@@ -34,7 +34,7 @@ database:
 
 redis:
   host: 127.0.0.1        # 服务地址
-  port: 6379             # 服务端口
+  port: 30001             # 服务端口
   db: 0                  # 库选择
   password: 123456       # 密码
 
@@ -43,7 +43,7 @@ minio:
   access_key_id: minioadmin     # 用户名
   secret_access_key: minioadmin # 密码
   use_ssl: false                # 密码
-  enabled: false                 # 是否启用
+  enabled: false               # 是否启用
 
 cos:
   appid: 12***63195                              # 唯一标识
@@ -60,4 +60,4 @@ oss:
 
 
 local:
-  enabled: true                                 # 是否启用
+  enabled: true                                # 是否启用

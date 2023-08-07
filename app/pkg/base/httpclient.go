@@ -67,12 +67,12 @@ func CheckRespStatus(resp *http.Response) (*Response, http.Header, error) {
 
 // Ask 建立http请求，返回header信息
 func Ask(requester Request) (respStatusCode int, respBytes *Response, respHeader http.Header, err error) {
-	request, err := http.NewRequest(requester.Method, requester.Url, requester.Body)
+	request, err := http.NewRequest(requester.Method, requester.Url, requester.Body) // NewRequest()函数用于创建一个http请求
 	if err != nil {
-		return 401, nil, nil, err
+		return 401, nil, nil, err //401是未授权的意思
 	}
 	// header 添加字段,包含token
-	if requester.HeaderSet != nil {
+	if requester.HeaderSet != nil { // if语句的作用是：如果requester.HeaderSet不为空，那么就将requester.HeaderSet中的数据添加到request.Header中
 		for k, v := range requester.HeaderSet {
 			request.Header.Set(k, v)
 		}
@@ -86,11 +86,13 @@ func Ask(requester Request) (respStatusCode int, respBytes *Response, respHeader
 		request.URL.RawQuery = params.Encode()
 	}
 
-	resp, err := Client.Do(request)
+	resp, err := Client.Do(request) // Do()函数用于发送请求
+	// Do()函数的作用是：1.发送请求；2.返回响应 3.返回错误 4.关闭响应的Body
+	// DO()函数的返回值是一个http.Response类型的数据，http.Response是一个结构体，包含多个成员变量，比如StatusCode、Header、Body等
 	if err != nil {
 		return 401, nil, nil, err
 	}
-	defer func(Body io.ReadCloser) {
+	defer func(Body io.ReadCloser) { // defer是延迟执行，这里的意思是：在函数执行完毕后，再执行defer后面的函数
 		err := Body.Close()
 		if err != nil {
 		}

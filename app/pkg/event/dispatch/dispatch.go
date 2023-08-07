@@ -2,6 +2,7 @@ package dispatch
 
 import (
 	"context"
+
 	"github.com/qinguoyi/osproxy/app/pkg/base"
 	_ "github.com/qinguoyi/osproxy/app/pkg/event/handlers" // 为了执行handlers包里的init 自动注册
 	"github.com/qinguoyi/osproxy/app/pkg/repo"

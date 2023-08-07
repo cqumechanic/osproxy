@@ -2,12 +2,13 @@ package plugins
 
 import (
 	"context"
-	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/credentials"
-	"github.com/qinguoyi/osproxy/bootstrap"
+	"sync"
+
+	"github.com/minio/minio-go/v7"                 // minio-go是MinIO的官方Golang SDK
+	"github.com/minio/minio-go/v7/pkg/credentials" // credentials包实现了凭证提供程序
+	"github.com/qinguoyi/osproxy/bootstrap"        // bootstrap包实现了应用程序的启动
 	"github.com/qinguoyi/osproxy/config"
 	"go.uber.org/zap"
-	"sync"
 )
 
 var lgMinio = new(LangGoMinio)

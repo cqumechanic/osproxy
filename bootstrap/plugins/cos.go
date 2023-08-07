@@ -3,13 +3,14 @@ package plugins
 import (
 	"context"
 	"fmt"
-	"github.com/qinguoyi/osproxy/bootstrap"
-	"github.com/qinguoyi/osproxy/config"
-	"github.com/tencentyun/cos-go-sdk-v5"
-	"go.uber.org/zap"
 	"net/http"
 	"net/url"
 	"sync"
+
+	"github.com/qinguoyi/osproxy/bootstrap"
+	"github.com/qinguoyi/osproxy/config"
+	"github.com/tencentyun/cos-go-sdk-v5" // cos-go-sdk-v5是腾讯云cos的go语言sdk
+	"go.uber.org/zap"
 )
 
 var lgCos = new(LangGoCos)

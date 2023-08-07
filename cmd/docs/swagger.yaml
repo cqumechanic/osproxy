@@ -1,0 +1,9 @@
+basePath: /
+host: 127.0.0.1:8888
+info:
+  contact:
+    name: qinguoyi
+  title: ObjectStorageProxy
+  version: "1.0"
+paths: {}
+swagger: "2.0"
